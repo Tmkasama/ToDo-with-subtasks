@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TodoList</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+  </head>
+
+  <body>
+    
+    <div class="Log">
+      {% if user.is_authenticated %}
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="btn" type="submit">Logout</button>
+      </form>
+      {% endif %}
+    </div>
+
+
+    <div class="container">
+      <h1
+        style="
+          color: black;
+          text-shadow: -1px 1px 0 #0ff, 1px 1px 0 #0ff, 1px -1px 0 #0ff,
+            -1px -1px 0 #0ff;
+          margin-top: 10px;
+        "
+        ;
+      >
+        Hello {{request.user|title}}
+      </h1>
+
+      <h1
+        style="
+          color: black;
+          text-shadow: -1px 1px 0 #f0f, 1px 1px 0 #f0f, 1px -1px 0 #f0f,
+            -1px -1px 0 #f0f;margin-top: 10px;
+        "
+      >
+        TodoList
+      </h1>
+      <form action="{% url 'add' %}" method="POST">
+        {% csrf_token %}
+        <div class="box">
+          <input type="text" name="test" id="" />
+          <button class="btn" type="submit">Submit</button>
+        </div>
+      </form>
+      <div class="main">
+        {% for item in items %}
+        <div style="display: flex; align-items: center; gap: 10px">
+          <h3>{{ item.name }}</h3>
+          <h3>id:{{ item.id }}</h3>
+
+          <button class="btn">
+            <a href="{% url 'delete' todo_id=item.id %}">Delete</a>
+          </button>
+
+          <button
+            class="btn"
+            onclick="openModal('{{ item.id }}','{{ item.name }}')"
+          >
+            Update
+          </button>
+
+          <button class="btn" onclick="viewSubtasks('{{ item.id }}')">
+            Subtasks
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Edit Text</h2>
+        <form id="updateForm" action="" method="POST">
+          {% csrf_token %}
+          <input type="text" name="updated_text" id="updatedText" required />
+          <button class="btn" type="submit" class="sub">Update</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      function viewSubtasks(todoId) {
+        window.location.href = `/subtasks/${todoId}/`;
+      }
+
+      function openModal(todoId, currentText) {
+        const updateForm = document.getElementById("updateForm");
+        const updatedText = document.getElementById("updatedText");
+
+        updateForm.action = `/update/${todoId}/`;
+        updatedText.value = currentText;
+
+        document.getElementById("myModal").style.display = "block";
+      }
+
+      function closeModal() {
+        document.getElementById("myModal").style.display = "none";
+      }
+    </script>
+  </body>
+</html>

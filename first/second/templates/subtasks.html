@@ -1,0 +1,155 @@
+<!-- subtaks -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      .back-btn {
+        position: fixed;
+        top: 50px;
+        left: 50px;
+        cursor: pointer;
+      }
+      .back-btn:hover {
+        background-color: cyan;
+        color: black;
+      }
+      .completed-task {
+        text-decoration: line-through;
+      }
+    </style>
+    <title>Subtasks</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    <div class="Log">
+      {% if user.is_authenticated %}
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="btn" type="submit">Logout</button>
+      </form>
+      {% endif %}
+    </div>
+
+    <div class="container">
+      <h1>Subtask: {{ task.name }}</h1>
+      <form action="{% url 'subtaskAdd' todo_id=task.id %}" method="POST">
+        {% csrf_token %}
+        <div class="box">
+          <input type="text" name="subtask_name" id="" />
+
+          <button class="btn" type="submit">Submit</button>
+        </div>
+      </form>
+      {% for subtask in subtasks %}
+      <div class="subtasks-text">
+        <!-- <h3>ID:{{ subtask.id }},</h3> -->
+        <span class="{% if subtask.complete %}completed-task{% endif %}">
+          <h3>{{ subtask.name }}</h3>
+        </span>
+
+        <form
+          method="POST"
+          action="{% url 'subtaskUpdate' todo_id=task.id subtask_id=subtask.id %}"
+        >
+          {% csrf_token %}
+        </form>
+
+        <button class="btn">
+          <a
+            href="{% url 'subtaskDelete' todo_id=task.id subtask_id=subtask.id %}"
+            >Delete</a
+          >
+        </button>
+        <button
+          class="btn"
+          onclick="openUpdateModal('{{ task.id }}','{{ subtask.id }}', '{{ subtask.name }}')"
+        >
+          Update
+        </button>
+
+        <form
+          method="POST"
+          action="{% url 'subtaskUpdate' todo_id=task.id subtask_id=subtask.id %}"
+        >
+          {% csrf_token %}
+          <input
+            style="width: 100%; margin: auto"
+            type="checkbox"
+            name="complete"
+            data-todo-id="{{ task.id }}"
+            data-subtask-id="{{ subtask.id }}"
+            class="subtask-checkbox"
+            {%
+            if
+            subtask.complete
+            %}checked{%
+            endif
+            %}
+            onchange="updateTaskStatus(this)"
+          />
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Edit Subtask</h2>
+        <form id="updateSubtaskForm" method="POST">
+          {% csrf_token %}
+          <input
+            type="text"
+            name="updated_subtask"
+            id="updatedSubtask"
+            required
+          />
+
+          <button class="btn" type="button" onclick="submitUpdateSubtaskForm()">
+            Update
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <button class="btn back-btn" onclick="goBack()">Back</button>
+
+    <script>
+      function goBack() {
+        window.location.href = "/";
+      }
+
+      function submitUpdateSubtaskForm() {
+        const updateSubtaskForm = document.getElementById("updateSubtaskForm");
+        updateSubtaskForm.action = `/subtasks/update/${updateSubtaskForm.dataset.todoId}/${updateSubtaskForm.dataset.subtaskId}/`;
+        updateSubtaskForm.submit();
+      }
+
+      function openUpdateModal(todoId, subtaskId, currentText) {
+        const updateSubtaskForm = document.getElementById("updateSubtaskForm");
+        const updatedSubtask = document.getElementById("updatedSubtask");
+
+        updateSubtaskForm.dataset.todoId = todoId;
+        updateSubtaskForm.dataset.subtaskId = subtaskId;
+        updateSubtaskForm.action = `/subtasks/update/${todoId}/${subtaskId}/`;
+        updatedSubtask.value = currentText;
+
+        document.getElementById("myModal").style.display = "block";
+      }
+
+      function closeModal() {
+        document.getElementById("myModal").style.display = "none";
+      }
+
+      function updateTaskStatus(checkbox, todoId, subtaskId) {
+        const subtaskText = checkbox
+          .closest(".subtasks-text")
+          .querySelector("h3");
+        subtaskText.classList.toggle("completed-task", checkbox.checked);
+      }
+    </script>
+  </body>
+</html>
